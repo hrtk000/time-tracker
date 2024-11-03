@@ -1,14 +1,16 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-
+//import 'package:animated_tree_view/animated_tree_view.dart';
 
 import 'src/utils/theme.dart';
-import 'src/utils/treePage.dart';
+import 'src/utils/tree_page.dart';
+import 'src/utils/tree_data.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  //await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -20,7 +22,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
+        title: 'Time Tracker',
         theme: appTheme,
         home: MyHomePage(),
       ),
@@ -29,23 +31,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
-
-  void getNext() {
-    current = WordPair.random();
-    notifyListeners();
-  }
-
-  var favorites = <WordPair>[];
-
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
-    } else {
-      favorites.add(current);
-    }
-    notifyListeners();
-  }
+  final activityTree = createTreeNode();
 }
 
 class MyHomePage extends StatefulWidget {
@@ -55,15 +41,15 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   var selectedIndex = 0;
-
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
     Widget page;
     switch (selectedIndex) {
       case 0:
         page = GeneratorPage();
       case 1:
-        page = TreePage(); //FavoritesPage();
+        page = TreePage(treeInput: appState.activityTree);
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
@@ -77,12 +63,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 extended: constraints.maxWidth >= 600,
                 destinations: [
                   const NavigationRailDestination(
-                    icon: const Icon(Icons.home),
+                    icon: Icon(Icons.home),
                     label: Text('Home'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.favorite),
-                    label: Text('Favorites'),
+                    icon: Icon(Icons.format_list_bulleted_add),
+                    label: Text('Categories'),
                   ),
                 ],
                 selectedIndex: selectedIndex,
@@ -109,75 +95,10 @@ class _MyHomePageState extends State<MyHomePage> {
 class GeneratorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          BigCard(pair: pair),
-          SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
-                icon: Icon(icon),
-                label: Text('Like'),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  appState.getNext();
-                },
-                child: Text('Next'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    return Center(child: Text('Next'));
   }
 }
 
-class BigCard extends StatelessWidget {
-  const BigCard({
-    super.key,
-    required this.pair,
-  });
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    return Card(
-      color: theme.colorScheme.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Text(
-          pair.asLowerCase,
-          style: style,
-          semanticsLabel: "${pair.first} ${pair.second}",
-        ),
-      ),
-    );
-  }
-}
 
 // class FavoritesPage extends StatefulWidget {
 //   @override
